@@ -803,15 +803,21 @@ for (my $i = 0; $i < $num_int; $i++) {
                         my $overfl_mod = defined($o_highperf) ? 18446744073709551616 : 4294967296;
 
                         # Check counter (s)
-                        my $overfl = ($$result{ $oid_perf_inoct[$i] } >= $file_values[$j][1]) ? 0 : $overfl_mod;
-                        $checkperf_out_raw[0] = (($overfl + $$result{ $oid_perf_inoct[$i] } - $file_values[$j][1])
-                            / ($timenow - $file_values[$j][0]));
+                        my $overfl_in = ($$result{ $oid_perf_inoct[$i] } >= $file_values[$j][1]) ? 0 : $overfl_mod;
+                        my $overfl_out = ($$result{ $oid_perf_outoct[$i] } >= $file_values[$j][2]) ? 0 : $overfl_mod;
+
+                        # If both in and out octet counters seem overflown then treat as reboot
+                        if (($overfl_in > 0) && ($overfl_out > 0)){
+                           $overfl_in = $file_values[$j][1];
+                           $overfl_out = $file_values[$j][2];
+                        }
+
+                        $checkperf_out_raw[0] = (($overfl_in + $$result{ $oid_perf_inoct[$i] } - $file_values[$j][1]) / ($timenow - $file_values[$j][0]));
                         $checkperf_out[0] = $checkperf_out_raw[0] / $speed_metric;
 
-                        $overfl = ($$result{ $oid_perf_outoct[$i] } >= $file_values[$j][2]) ? 0 : $overfl_mod;
-                        $checkperf_out_raw[1] = (($overfl + $$result{ $oid_perf_outoct[$i] } - $file_values[$j][2])
-                            / ($timenow - $file_values[$j][0]));
+                        $checkperf_out_raw[1] = (($overfl_out + $$result{ $oid_perf_outoct[$i] } - $file_values[$j][2]) / ($timenow - $file_values[$j][0]));
                         $checkperf_out[1] = $checkperf_out_raw[1] / $speed_metric;
+
 
                         if (defined($o_ext_checkperf)) {
                             $checkperf_out[2]
